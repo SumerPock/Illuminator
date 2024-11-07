@@ -451,11 +451,6 @@
               <FilePath>..\Core\Src\Task_lwip.c</FilePath>
             </File>
             <File>
-              <FileName>Task_steer_gear.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\Task_steer_gear.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\bsp_dma.c</FilePath>
@@ -466,11 +461,6 @@
               <FilePath>..\Core\Src\bsp_uart_dma.c</FilePath>
             </File>
             <File>
-              <FileName>PUDI_APP.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\PUDI_APP.c</FilePath>
-            </File>
-            <File>
               <FileName>ring_buffer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\ring_buffer.c</FilePath>
@@ -479,6 +469,11 @@
               <FileName>ring_buffer_chapter.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\ring_buffer_chapter.c</FilePath>
+            </File>
+            <File>
+              <FileName>Task_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\Task_pwm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -920,32 +915,32 @@
           <targetInfo excluded="1" name="Comprehensive_control_922" versionMatchMode=""/>
         </targetInfos>
       </component>
-      <component Cbundle="lwIP" Cclass="Network" Cgroup="API" Cvendor="lwIP" Cversion="2.1.2" condition="Network Core">
-        <package name="lwIP" schemaVersion="1.6" url="http://www.keil.com/pack/" vendor="lwIP" version="2.1.2"/>
+      <component Cbundle="lwIP" Cclass="Network" Cgroup="API" Cvendor="lwIP" Cversion="2.2.0" condition="Network Core">
+        <package name="lwIP" schemaVersion="1.6" url="https://www.keil.com/pack/" vendor="lwIP" version="2.2.0"/>
         <targetInfos>
           <targetInfo name="Comprehensive_control_922"/>
         </targetInfos>
       </component>
-      <component Cbundle="lwIP" Cclass="Network" Cgroup="CORE" Cvariant="IPv4" Cvendor="lwIP" Cversion="2.1.2">
-        <package name="lwIP" schemaVersion="1.6" url="http://www.keil.com/pack/" vendor="lwIP" version="2.1.2"/>
+      <component Cbundle="lwIP" Cclass="Network" Cgroup="CORE" Cvariant="IPv4" Cvendor="lwIP" Cversion="2.2.0">
+        <package name="lwIP" schemaVersion="1.6" url="https://www.keil.com/pack/" vendor="lwIP" version="2.2.0"/>
         <targetInfos>
           <targetInfo name="Comprehensive_control_922"/>
         </targetInfos>
       </component>
-      <component Cbundle="lwIP" Cclass="Network" Cgroup="Driver" Csub="Ethernet" Cvariant="CMSIS Driver" Cvendor="lwIP" Cversion="2.1.2" condition="CMSIS Driver Ethernet">
-        <package name="lwIP" schemaVersion="1.6" url="http://www.keil.com/pack/" vendor="lwIP" version="2.1.2"/>
+      <component Cbundle="lwIP" Cclass="Network" Cgroup="Driver" Csub="Ethernet" Cvariant="CMSIS Driver" Cvendor="lwIP" Cversion="2.2.0" condition="CMSIS Driver Ethernet">
+        <package name="lwIP" schemaVersion="1.6" url="https://www.keil.com/pack/" vendor="lwIP" version="2.2.0"/>
         <targetInfos>
           <targetInfo excluded="1" name="Comprehensive_control_922" versionMatchMode=""/>
         </targetInfos>
       </component>
-      <component Cbundle="lwIP" Cclass="Network" Cgroup="Interface" Csub="Ethernet" Cvendor="lwIP" Cversion="2.1.2" condition="Network Core with Driver Ethernet">
-        <package name="lwIP" schemaVersion="1.6" url="http://www.keil.com/pack/" vendor="lwIP" version="2.1.2"/>
+      <component Cbundle="lwIP" Cclass="Network" Cgroup="Interface" Csub="Ethernet" Cvendor="lwIP" Cversion="2.2.0" condition="Network Core with Driver Ethernet">
+        <package name="lwIP" schemaVersion="1.6" url="https://www.keil.com/pack/" vendor="lwIP" version="2.2.0"/>
         <targetInfos>
           <targetInfo name="Comprehensive_control_922"/>
         </targetInfos>
       </component>
-      <component Cbundle="lwIP" Cclass="Network" Cgroup="RTOS" Cvariant="CMSIS-RTOS2" Cvendor="lwIP" Cversion="2.1.2" condition="Network with CMSIS-RTOS2">
-        <package name="lwIP" schemaVersion="1.6" url="http://www.keil.com/pack/" vendor="lwIP" version="2.1.2"/>
+      <component Cbundle="lwIP" Cclass="Network" Cgroup="RTOS" Cvariant="CMSIS-RTOS2" Cvendor="lwIP" Cversion="2.2.0" condition="Network with CMSIS-RTOS2">
+        <package name="lwIP" schemaVersion="1.6" url="https://www.keil.com/pack/" vendor="lwIP" version="2.2.0"/>
         <targetInfos>
           <targetInfo name="Comprehensive_control_922"/>
         </targetInfos>

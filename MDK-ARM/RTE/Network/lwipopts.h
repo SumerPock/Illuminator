@@ -367,7 +367,7 @@ The STM32F4xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define GW_ADDR0                    192
 #define GW_ADDR1                    168
 #define GW_ADDR2                    0
-#define GW_ADDR3                    120
-
+//#define GW_ADDR3                    120
+#define GW_ADDR3                    1
 
 #endif /* LWIP_LWIPOPTS_H */

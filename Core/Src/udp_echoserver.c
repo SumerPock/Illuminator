@@ -154,8 +154,8 @@ void udp_echoserver_receive_callback(void *arg,
 //	memcpy(receivebuf , p->payload , p->len);
 	ucGetUdpLen = p->len;
 //	memcpy(&SetUdpData , p->payload , ucGetUdpLen);
-	
-	memcpy(&getudpdata , p->payload , ucGetUdpLen);
+	getudpdata.nUdpD_size = ucGetUdpLen;
+	memcpy(&getudpdata.arrUdp_index , p->payload , ucGetUdpLen);
 //	SetUdpData.ucGetUdpFlag = 0x01;
 	/* Connect to the remote client */
 //  udp_connect(upcb , addr , UDP_CLIENT_PORT);

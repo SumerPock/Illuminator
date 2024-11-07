@@ -14,6 +14,156 @@
 	
 #include "bsp.h"
 
+TIM_HandleTypeDef htim2;
+
+/*!
+* @brief ARM 软重启 
+* ETH 重启指令: 0xff 0xaa 0xaa 0xff
+* @retval: 无
+*/
+#define SCB_AIRCR             (*(unsigned long *)0xE000ED0C)      //Reset control Address Register
+#define SCB_RESET_VALUE       0x05FA0004                          //reset value ,write to SCB_AIRCR  can reset cpu
+void Reset_System(void)
+{
+	SCB_AIRCR=SCB_RESET_VALUE;
+}
+
+
+void Update_Timer_Arr(uint32_t new_arr_value) {
+    // 禁止定时器
+    __HAL_TIM_DISABLE(&htim2);
+
+    // 更新 ARR 值
+    htim2.Instance->ARR = new_arr_value;
+
+    // 生成更新事件
+    __HAL_TIM_SET_COUNTER(&htim2, 0); // 可选：重置计数器
+    __HAL_TIM_ENABLE(&htim2); // 重新启用定时器
+}
+
+void GpioToogleSet(GpioToogleSetPar *rect)
+{
+	switch (rect->nflagGpio)
+	{
+	case 1:
+		setpar.arrset = setpar.arrtimelow;
+//	MX_TIM2_Init();
+		if(HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
+		}	
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+		rect->nflagGpio = 2;
+		#ifdef GPIOTOOGLRDEBUG
+			SEGGER_RTT_SetTerminal(1);
+			SEGGER_RTT_printf(0, "GpioToogleSet is run rect->nflagGpio = 1 \r\n");	
+		#else
+		#endif		
+		
+	break;					
+
+	case 2:
+		if(rect->pulseCountSet > 0)//设置脉冲次数
+		{
+			if(rect->pulseCountSet > rect->pulseCount)//设置脉冲次数 对比 轮询计算数
+			{
+				rect->pulseCount++;
+				#ifdef GPIOTOOGLRDEBUG
+					SEGGER_RTT_SetTerminal(1);
+					SEGGER_RTT_printf(0, "rect->pulseCount = %d \r\n",rect->pulseCount);	
+				#else
+				#endif						
+				HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
+				//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+				if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
+				}
+				bsp_DelayDWT(675 - 30); //测试发现为5.0325us
+				HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+				//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+				if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
+				}
+			}
+			else
+			{
+				//关闭任务
+				if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
+				}
+				setpar.nflagGpio = 0;
+			}
+		}
+		else
+		{
+		//无限次数出
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+			if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
+			}
+			bsp_DelayDWT(675 - 30); //测试发现为5.0325us
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+			if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
+			}
+			#ifdef GPIOTOOGLRDEBUG
+			SEGGER_RTT_SetTerminal(2);
+			SEGGER_RTT_printf(0, "GpioToogleSet is run rect->nflagGpio = 2 wuxian \r\n");
+			#else
+			#endif	
+		}
+	break;
+	}
+}
+
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+//  htim2.Init.Period = 167;
+//	htim2.Init.Period = 83;
+//	htim2.Init.Period = 419;
+//	htim2.Init.Period = setpar.arrset;
+	htim2.Init.Period = 839999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -140,95 +290,95 @@ void bsp_LED_InitGpio(void){
 /* USER CODE END 4 */
 
 /*	SPI数据读取	*/
-static PUDI_ENCODERFUNC CfgPrm;
-static int SpiAngle = 0; 
-static int PrvSpiAngle = 0; 
-static unsigned char StreamStatus = 0;		
-static int CountFlag = 0;
-static double spiangle = 0;
+//static PUDI_ENCODERFUNC CfgPrm;
+//static int SpiAngle = 0; 
+//static int PrvSpiAngle = 0; 
+//static unsigned char StreamStatus = 0;		
+//static int CountFlag = 0;
+//static double spiangle = 0;
 /****
 	读取SPI传输器数据，及ADC数据
 ****/
 void timer_Periodic_App(void *argument)
 {
 	
-	static unsigned short loop = 0;
-	unsigned short ad_value = 0;
-	unsigned int ui_value = 0;
-	HAL_ADC_Start(&hadc1);    //启动ADC转换
-	
-	//if(HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK )  //如果转换结果完成
-	ad_value = HAL_ADC_GetValue(&hadc1);	//获取转换值	
-	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, ad_value))){
-	#ifdef	DEBUGPR
-		SEGGER_RTT_SetTerminal(0);
-		SEGGER_RTT_printf(0, "ad_value is ok \r\n");		
-	#endif
-	}
-	else
-	{
-		#ifdef	DEBUGPR
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "ad_value is error \r\n");		
-		#endif
-	}
-	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, ad_value >> 8))){
-		#ifdef	DEBUGPR
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "ad_value >> 8 is ok \r\n");
-		#endif
-	}
-	else
-	{
-		#ifdef	DEBUGPR
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "ad_value is error \r\n");			
-		#endif		
-	}
-	
-	
-	unsigned short bk = 1;
-	unsigned char StreamCRC = 0; //编码器CRC校验
-	bk = PUDI_ReadAngle(&StreamStatus , &StreamCRC , &SpiAngle);	
-	if(bk == 0)
-	{
-		#ifdef	DEBUGPR
-			//continue;	//CRC校验错误，重复读取
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "crc is fild \r\n");
-		#endif
-	}
-	CountFlag = SpiAngle - PrvSpiAngle;
-	//增加迟滞判断 定义5bit LSB，拟制抖动干扰
-	if(abs(SpiAngle - PrvSpiAngle) > HystLSB){
-		PrvSpiAngle = SpiAngle;
-	}
-	//角度翻转范围为0~65536 或者 65536~0 增加阈值90° 拟制干扰
-	if(CountFlag > 16384){
-		CfgPrm.Counter++;
-	}	
-	else if(-CountFlag > 16384){
-		CfgPrm.Counter--;
-	}	
-	/*此动作由上位机运行*/
-	spiangle = (double)SpiAngle / 65536.0 * 360.0;	
-	//short senddata = (short)(spiangle*100);
-	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, SpiAngle))){
-		#ifdef	DEBUGPR
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "SpiAngle is ok \r\n");
-		#endif
-	}
-	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, SpiAngle >> 8))){
-		#ifdef	DEBUGPR
-			SEGGER_RTT_SetTerminal(0);
-			SEGGER_RTT_printf(0, "SpiAngle >> 8 is ok \r\n");
-		#endif
-	}
-	#ifdef	DEBUGPR
-		SEGGER_RTT_SetTerminal(0);
-		SEGGER_RTT_printf(0, "timer is runing \r\n");				
-	#endif
+//	static unsigned short loop = 0;
+//	unsigned short ad_value = 0;
+//	unsigned int ui_value = 0;
+//	HAL_ADC_Start(&hadc1);    //启动ADC转换
+//	
+//	//if(HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK )  //如果转换结果完成
+//	ad_value = HAL_ADC_GetValue(&hadc1);	//获取转换值	
+//	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, ad_value))){
+//	#ifdef	DEBUGPR
+//		SEGGER_RTT_SetTerminal(0);
+//		SEGGER_RTT_printf(0, "ad_value is ok \r\n");		
+//	#endif
+//	}
+//	else
+//	{
+//		#ifdef	DEBUGPR
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "ad_value is error \r\n");		
+//		#endif
+//	}
+//	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, ad_value >> 8))){
+//		#ifdef	DEBUGPR
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "ad_value >> 8 is ok \r\n");
+//		#endif
+//	}
+//	else
+//	{
+//		#ifdef	DEBUGPR
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "ad_value is error \r\n");			
+//		#endif		
+//	}
+//	
+//	
+//	unsigned short bk = 1;
+//	unsigned char StreamCRC = 0; //编码器CRC校验
+//	bk = PUDI_ReadAngle(&StreamStatus , &StreamCRC , &SpiAngle);	
+//	if(bk == 0)
+//	{
+//		#ifdef	DEBUGPR
+//			//continue;	//CRC校验错误，重复读取
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "crc is fild \r\n");
+//		#endif
+//	}
+//	CountFlag = SpiAngle - PrvSpiAngle;
+//	//增加迟滞判断 定义5bit LSB，拟制抖动干扰
+//	if(abs(SpiAngle - PrvSpiAngle) > HystLSB){
+//		PrvSpiAngle = SpiAngle;
+//	}
+//	//角度翻转范围为0~65536 或者 65536~0 增加阈值90° 拟制干扰
+//	if(CountFlag > 16384){
+//		CfgPrm.Counter++;
+//	}	
+//	else if(-CountFlag > 16384){
+//		CfgPrm.Counter--;
+//	}	
+//	/*此动作由上位机运行*/
+//	spiangle = (double)SpiAngle / 65536.0 * 360.0;	
+//	//short senddata = (short)(spiangle*100);
+//	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, SpiAngle))){
+//		#ifdef	DEBUGPR
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "SpiAngle is ok \r\n");
+//		#endif
+//	}
+//	if(RING_BUFFER_SUCCESS == (RB_Write_Byte(&rb_adc_rx, SpiAngle >> 8))){
+//		#ifdef	DEBUGPR
+//			SEGGER_RTT_SetTerminal(0);
+//			SEGGER_RTT_printf(0, "SpiAngle >> 8 is ok \r\n");
+//		#endif
+//	}
+//	#ifdef	DEBUGPR
+//		SEGGER_RTT_SetTerminal(0);
+//		SEGGER_RTT_printf(0, "timer is runing \r\n");				
+//	#endif
 }
 
 

@@ -27,6 +27,7 @@
 	
 /* º¯ÊýÉùÃ÷*/
 void bsp_InitDWT(void);
+void bsp_DelayDWT(unsigned int _ulDelayTime);
 //void bsp_DelayDWT(uint32_t _ulDelayTime);
 void bsp_DelayUS(unsigned int _ulDelayTime);
 void bsp_DelayMS(unsigned int _ulDelayTime);

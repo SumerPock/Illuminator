@@ -21,6 +21,7 @@
 #include "bsp_uart_fifo.h"
 #include "bsp_dma.h"
 #include "bsp_uart_dma.h"
+#include "bsp_dwt.h"
 
 #include "ring_buffer.h"
 #include "ring_buffer_chapter.h"
@@ -41,138 +42,60 @@
 #define DISABLE_INT()	__set_PRIMASK(1)	/* 禁止全局中断 */
 
 
+
+
+
+
+// 定义结构体来存储属性
+typedef struct
+{
+    unsigned int arrset;       	// ARR设定值
+    unsigned int arrtimelow;   	// ARR设定低电平时间
+    unsigned int arrtimehight; 	// ARR设定高电平时间
+    int pulseCount;   					// 脉冲次数
+		int pulseCountSet;					//设置的脉冲次数
+    unsigned int nflagGpio;    	// GpioToogleSet函数内部状态机
+    unsigned int nflagtime2;   	// 定时器2触发标志
+} GpioToogleSetPar;
+extern GpioToogleSetPar setpar;
 //#define	DEBUGPR 1
 
 
-extern int16_t Data_out[200];
-
-extern unsigned short Cal_Sum(uint8_t * Data_In , uint8_t len);
-extern void out_sine(unsigned char gethz, unsigned char getdu, unsigned short* getnumber, short dataout[200]);
-//extern void out_sine(unsigned char gethz , unsigned char getdu);
-/*环形队列创建*/
-extern unsigned char adcbuff[4096]; 
-extern ring_buffer rb_adc_rx;
-
-/*环形队列*/
-//extern unsigned char spibuff[4096]; 
-//extern ring_buffer rb_spi_rx;	
-
-/*舵机出厂检测1模式*/
-extern unsigned char steering_gear_mode1[4096]; 
-extern ring_buffer stgear_rx;	
+struct preciseCoding
+{
+	short 					Frequency; //次数
+	unsigned short  CodCycle;	 //周期
+};
 
 
-/*舵机出厂检测2模式*/
-extern unsigned char steering_gear_mode2[4096]; 
-extern ring_buffer stgear_rxmode2;							/*环形队列*/
-
-/* 保存定时器ID */
-extern void timer_Periodic_App(void *argument);
-extern osTimerId_t  timerID_Periodic;        				
-extern const osTimerAttr_t timer_Periodic_Attr;
 
 
-extern void SystemClock_Config(void);
-extern uint8_t PUDI_ReadAngle(uint8_t *state,uint8_t *CRC8, int32_t* ReadRegData);
-extern void bsp_Spi_Cs_InitGpio(void);
-extern void bsp_LED_InitGpio(void);
 
-extern ADC_HandleTypeDef hadc1;
 
 
 /*udp通用接收函数*/
 struct Get_UdPData
 {
-	unsigned char ucudpdata[50];
-};
-
-//#pragma pack(2)
-
-/*上位机下发舵机板控制协议*/
-struct GETUDPDATA
-{
-	unsigned char ucGetUdpHand[2];	//帧头
-	unsigned char ucGetUdploop;		//帧序号
-	unsigned char ucGetUdpID;			//ID
-	unsigned char ucSetUdpSampling_Rate[2];	  //采样率
-	unsigned char ucSetUdpSampling_Number[2]; //采样数量	
-	
-	/*具体数据*/
-	unsigned char dataucGetUdpHand[2]; 	//具体数据帧头
-	unsigned char dataucGetUdplen;			//帧长
-	unsigned char dataucGetUdploop[2];	//流水号
-	
-	unsigned char dataucsteering_gear1[2];	//舵机指令1L
-	unsigned char dataucsteering_gear2[2];	//舵机指令2L
-	
-	unsigned char dataucChick[2];
-	unsigned char dataucend;
+	unsigned char nUdpD_size;
+	unsigned char arrUdp_index[128];
 };
 
 
+///*下位机收到 -> 舵机参数修改*/
+//struct Parameter_Steering_gear
+//{
+//	unsigned char ucpsdata[25];
+//};
 
 
-
-/*舵机出厂检测1.下位机发送给舵机驱动板的数据*/
-struct STEER_UART_DATA
-{
-	unsigned short 	steer_Hand;			//帧头
-	unsigned char 	steer_len;			//帧长
-	unsigned short  steer_loop;			//帧序号
-	unsigned short 	steering_gear1;		//舵机指令1
-	unsigned short  steering_gear2;		//舵机指令2
-	unsigned short  chickdata;				//校验码
-	unsigned char  enddata;					//帧尾
-};
-
-/*舵机出厂检测1.下位机向上给上位机报的值*/
-struct COM_Steering_gear
-{
-	unsigned char ucSetUdpHand[2];			//头
-	unsigned char ucSetlen;							//长度
-	unsigned char ucSetUdploop[2];						//序号
-	unsigned char ucSetUdpID;									//ID
-	unsigned char ucSetUdpSampling_Rate[2];	  //采样率
-	unsigned char ucSetUdpSampling_Number[2]; //采样数量
-	unsigned char getucSetlen[2];				//接收长度
-	unsigned char steering_gear1[2];	//舵机1
-	unsigned char steering_gear2[2];	//舵机2
-	unsigned char spi_data[2];				//SPI
-	unsigned char chick[2];						//校验
-};
-
-/*下位机收到 -> 舵机参数修改*/
-struct Parameter_Steering_gear
-{
-	unsigned char ucpsdata[25];
-};
-
-/*下位机下发 -> 舵机参数修改*/
-
-
-
-/*电位计入场验收. UDP数据打包发送*/
-struct SETUDPDATA
-{
-	unsigned char ucSetUdpHand[2];						//头
-	unsigned char ucSetUdploop;								//序号
-	unsigned char ucSetUdpID;									//ID
-	unsigned char ucSetUdpSampling_Rate[2];	  //采样率
-	unsigned char ucSetUdpSampling_Number[2]; //采样数量
-	unsigned char getdata[800];								//震动ADC数据 200包
-};
-
-
-/*舵机出厂检测1*/
-struct Steering_gear_Mode1
-{
-	unsigned char SgUdpHand[2];		//头
-	unsigned char SgUdpNum;				//帧序号
-	unsigned char SgUdpID;				//帧ID
-	unsigned char SgUdpSampling_Rate[2];		//采样率
-	unsigned char SgUdpSampling_Number[2];	//采样数
-	unsigned char SgUdpSteering_gear_spi[800];
-};
+//struct baseCoding
+//{
+//	signed short 		baseCodFrequency; //次数
+//	unsigned short  baseCodCycle;			//周期
+//	
+//	unsigned short  baseCFVerify; 		//次数验证
+//	unsigned short  baseCCVerify;			//周期验证	
+//};
 
 
 typedef struct
@@ -193,9 +116,15 @@ extern BspUart_t g_tBspUsart6;
 extern struct GETUDPDATA SetUdpData;
 
 
+/***引用部分***/
 
+extern void Update_Timer_Arr(uint32_t new_arr_value);
 
-void Error_Handler(void);
+extern TIM_HandleTypeDef htim2;
+extern void SystemClock_Config(void);
+extern void MX_TIM2_Init(void);
+extern void GpioToogleSet(GpioToogleSetPar *rect);
+extern void Error_Handler(void);
 /**********	RTX5引用	***********/
 
 /************************* 消息队列 *******************************/
@@ -209,6 +138,14 @@ extern const osMessageQueueAttr_t UdpResData_Attr;
 extern osMessageQueueId_t msgQueue_rxuart1Data; 	
 extern const osMessageQueueAttr_t rxuart1Data_Attr;
 
+/* 保存定时器ID */
+extern void timer_Periodic_App(void *argument);
+extern osTimerId_t  timerID_Periodic;        				
+extern const osTimerAttr_t timer_Periodic_Attr;
+
+/*传输精确频率码信息*/
+extern osMessageQueueId_t msgQueue_PreFreData; 
+extern const osMessageQueueAttr_t PreFreData_Attr;
 
 /************************* 事件标志组 *******************************/
 
@@ -216,9 +153,9 @@ extern const osMessageQueueAttr_t rxuart1Data_Attr;
 extern osEventFlagsId_t event_cable_ID;
 extern const osEventFlagsAttr_t event_cable_Attr;
 
-/* 网口获取数据接 事件标志组属性 */
-extern const osEventFlagsAttr_t event_UdpGetData_Attr;
-extern osEventFlagsId_t event_UdpGetData_ID;
+///* 网口获取数据接 事件标志组属性 */
+//extern const osEventFlagsAttr_t event_UdpGetData_Attr;
+//extern osEventFlagsId_t event_UdpGetData_ID;
 
 /* 采样控制 */
 extern const osEventFlagsAttr_t event_Sampling_Attr;
@@ -227,11 +164,15 @@ extern osEventFlagsId_t event_Sampling_ID;
 
 extern const osEventFlagsAttr_t event_HzMode_Attr;
 extern osEventFlagsId_t event_HzMode_ID;
-/************************* 任务 *******************************/
 
-extern void AppTaskGetDataAndUDP(void *argument);	/*UDP网络打包任务*/
-extern const osThreadAttr_t ThreadGetDataAndUDP_Attr;
-extern osThreadId_t ThreadIdTaskGetDataAndUDP;
+/*PWM任务控制*/
+extern const osEventFlagsAttr_t event_PWMTaskFlag_Attr;
+extern osEventFlagsId_t event_PWMTaskFlag_ID;
+
+extern const osEventFlagsAttr_t event_Time2Flag_Attr;
+extern osEventFlagsId_t event_Time2Flag_ID;
+
+/************************* 任务 *******************************/
 
 
 extern osThreadId_t ThreadIdStart;								/*启动任务*/
@@ -262,7 +203,9 @@ extern void AppTaskARMSteer_gear(void *argument);
 extern const osThreadAttr_t ThreadARMSteer_gear_Attr;
 extern osThreadId_t ThreadIdTaskARMSteer_gear;
 
-
+extern void AppTaskSetPWM(void *argument);
+extern const osThreadAttr_t ThreadSetPWM_Attr;
+extern osThreadId_t ThreadIdTaskSetPWM;
 #endif
 
 
