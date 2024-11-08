@@ -530,15 +530,14 @@ void BSP_UART_IDLE_Handler(UART_HandleTypeDef *huart)
 			{
 				g_tBspUsart1.rxLen  = g_tBspUsart1.rxSize - rxCnt;
 				g_tBspUsart1.rxFlag = 1;
-				
+
 //				os_Status = osEventFlagsGet(event_Sampling_ID);
 //				if(os_Status == 0x00)
 //				{
 //					/*关闭采样*/
 //				}
 //				else if(os_Status == 0x02)
-//				{
-//					 
+//				{				 
 //				}			
 				osMessageQueuePut(msgQueue_rxuart1Data , &g_tBspUsart1.pRxBuf , NULL , NULL);
 				/* 重新开启串口接收 如果在中断里面开启接收，发送函数需要开关中断,具体原因请看文档UART里面关于 __HAL_LCOK 说明 */

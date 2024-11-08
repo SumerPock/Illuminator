@@ -14,6 +14,9 @@
 
 #include "bsp.h"
 
+
+
+
 /**
   * @brief 	网线插拔状态，非堵塞性
   * @retval 
@@ -85,93 +88,62 @@ void AppTaskUdpNetWork(void *argument){
 		os_Status = osMessageQueueGet(msgQueue_UdpResData, &mygetudpdata, NULL,	osWaitForever);    											
 		if(osOK == os_Status)
 		{
-			for(int i = 0 ; i < mygetudpdata.nUdpD_size ; i++)
-			{
-				printf("GetTcpData.arrData[%d] = %d \r\n", i , mygetudpdata.arrUdp_index[i]);
-//				SEGGER_RTT_SetTerminal(0);
-//				SEGGER_RTT_printf(0, "GetTcpData.arrData[%d] = %d \r\n", i , mygetudpdata.arrUdp_index[i]);
-			}
-			/*数据解析*/
 			if(mygetudpdata.nUdpD_size == mygetudpdata.arrUdp_index[0])
 			{
 				switch(mygetudpdata.arrUdp_index[1])
 				{
-					case 1:
-//						BSP_UART_Transmit_DMA(&husart3 , &GetTcpData.arrData[2] , GetTcpData.arrData[0] - 4);
-//						SEGGER_RTT_SetTerminal(0);
-//						SEGGER_RTT_printf(0, "fen funis xieyizhuanfa \r\n");						
-						break;
-					case 2://固定脉冲频率
-						PreCod.Frequency = mygetudpdata.arrUdp_index[2] | mygetudpdata.arrUdp_index[3] << 8;
-						if(PreCod.Frequency == 0)
-						{
-							//停止,无需解析周期数据了
-							//osEventFlagsSet(event_PWMTaskFlag_ID , 0x01U << 0);	
-							//关闭定时器中断
-							if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
-							}
-						}
-						else if(PreCod.Frequency == -1)
-						{
-							int narr = 0;
-							//osStatus = osThreadGetState(ThreadIdTaskSetPWM);
-							PreCod.CodCycle = mygetudpdata.arrUdp_index[4] | mygetudpdata.arrUdp_index[5] << 8;
-							narr =  (PreCod.CodCycle * 10) * 84 -1;;
-							printf("PreCod.CodCycle = %d \r\n" , narr);
-							setpar.nflagGpio = 1;
-							
-							Update_Timer_Arr(narr);
-							//第一次出，无限次
-							if(HAL_TIM_Base_Start_IT(&htim2)!= HAL_OK){
-							}									
-							
-							//if(osStatus == osThreadRunning || osStatus == osThreadBlocked)
-							{
-//								//停止,无需解析周期数据了
-//								osEventFlagsSet(event_PWMTaskFlag_ID , 0x01U << 0);
-//								//无限次
-								
-//								osMessageQueuePut(msgQueue_PreFreData , &PreCod , NULL , NULL); 
-//								printf("on ThreadIdTaskSetPWM \r\n");
-//								ThreadIdTaskSetPWM = osThreadNew(AppTaskSetPWM, NULL, &ThreadSetPWM_Attr);
-//								osEventFlagsSet(event_PWMTaskFlag_ID , 0x00U << 0);	
-
-									//第二次出无限次
-//									if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
-//									}
-//									if(HAL_TIM_Base_Start_IT(&htim2)!= HAL_OK){
-//									}		
-							}
-							//else if(osStatus == osThreadError)
-							{
-						
-//								PreCod.CodCycle = mygetudpdata.arrUdp_index[4] | mygetudpdata.arrUdp_index[5] << 8;
-//								osMessageQueuePut(msgQueue_PreFreData , &PreCod , NULL , NULL); 
-//								printf("on ThreadIdTaskSetPWM \r\n");
-//								ThreadIdTaskSetPWM = osThreadNew(AppTaskSetPWM, NULL, &ThreadSetPWM_Attr);									
-							}
-							
-						}
+				case 1:					
+				break;
 					
-//						SEGGER_RTT_SetTerminal(0);
-//						SEGGER_RTT_printf(0, "fen funis neirongbu \r\n");	
-						break;
-					case 3:
-//						SEGGER_RTT_SetTerminal(0);
-//						SEGGER_RTT_printf(0, "fen funis neitongbuweisuiji \r\n");	
-						break;
-					case 4:
-//						SEGGER_RTT_SetTerminal(0);
-//						SEGGER_RTT_printf(0, "fen funis jidianqi \r\n");	
-						break;
+				case 2://固定脉冲频率
+				PreCod.Frequency = mygetudpdata.arrUdp_index[3] | mygetudpdata.arrUdp_index[4] << 8;
+				int narr = 0;
+				int nRedress = 0;
+					switch(mygetudpdata.arrUdp_index[2])
+					{
+					case 0://装订		
+					setpar.pulseCount = 0;					
+					setpar.pulseCountSet = PreCod.Frequency;
+					PreCod.CodCycle = mygetudpdata.arrUdp_index[5] | mygetudpdata.arrUdp_index[6] << 8;
+					nRedress = PreCod.CodCycle / 1000;/*矫正计算*/
+					narr =  (PreCod.CodCycle * 84 - 1) - arrRedress[nRedress];
+					Update_Timer_Arr(narr);
+					setpar.nflagGpio = 1;	
+					if(HAL_TIM_Base_Start_IT(&htim2)!= HAL_OK){
+					}	
+					break;
+							
+					case 1://控制
+					if(mygetudpdata.arrUdp_index[3] == 0x01){
+					}else if(mygetudpdata.arrUdp_index[3] == 0x02){
+						if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
+						}									
+					}
+					break;
+						
+					case 2://查询
+					break;		
+					}
+				break;
+
+				case 4:
+				if(mygetudpdata.arrUdp_index[2] == 1)//控制
+				{//控制
+					if(mygetudpdata.arrUdp_index[3] == 1)
+						ThreadIdTaskSetPWM = osThreadNew(AppTaskSetPWM, NULL, &ThreadSetPWM_Attr);	
+					else if(mygetudpdata.arrUdp_index[3] == 2)
+						osEventFlagsSet(event_PWMTaskFlag_ID , 0x01U << 0); 
+				}
+				else if(mygetudpdata.arrUdp_index[2] == 0)
+				{//装订
+				}
+				else if(mygetudpdata.arrUdp_index[2] ==2)
+				{//查询
+				}
+				break;
+
 				}
 			}
-			
-//			udp_echoclient_send(buffer , 30);
-//			if(mygetudpdata.ucudpdata[0] == 0xAA && mygetudpdata.ucudpdata[1] == 0xBB)
-//			{
-//				
-//			}
 		}	
 	}
 }

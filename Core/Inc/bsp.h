@@ -43,7 +43,7 @@
 
 
 
-
+extern unsigned short arrRedress[31];
 
 
 // 定义结构体来存储属性

@@ -165,7 +165,7 @@ osThreadId_t ThreadIdTaskARMSteer_gear = NULL;
 AppTaskSetPWM
 1.	任务名：
 2.	任务工作：
-			1-200Hz脉冲频率
+			伪随机任务
 3.	优先级：
 			High7
 4.	任务类型
@@ -175,7 +175,7 @@ const osThreadAttr_t ThreadSetPWM_Attr =
 {
 	.name = "osRtxSetPWMThread",
 	.attr_bits = osThreadDetached, 
-	.priority = osPriorityISR,
+	.priority = osPriorityHigh7,
 	.stack_size = 2048,
 };
 osThreadId_t ThreadIdTaskSetPWM = NULL;
@@ -205,8 +205,13 @@ osEventFlagsId_t event_cable_ID = NULL;
 const osEventFlagsAttr_t event_PWMTaskFlag_Attr = {.name = "event_PwmTaskFlag"};
 osEventFlagsId_t event_PWMTaskFlag_ID = NULL;
 
+/*定时器2*/
 const osEventFlagsAttr_t event_Time2Flag_Attr = {.name = "event_Time2Flag",};
 osEventFlagsId_t event_Time2Flag_ID = NULL;
+
+
+
+
 
 GpioToogleSetPar setpar = {839999, 2519999, 0, 0, 0, 0};
 
@@ -289,9 +294,12 @@ void AppTaskStart(void *argument)
 	ThreadIdTaskUdpNetWork = osThreadNew(AppTaskUdpNetWork, NULL, &ThreadUdpNetWork_Attr);	
 	tick += usFrequency + 500;                          
 	osDelayUntil(tick);
-	
+
+	/*伪随机任务在需要关闭时关闭，减轻系统负担*/
 	event_PWMTaskFlag_ID = osEventFlagsNew(&event_PWMTaskFlag_Attr);	
-	/* 这个定时器浪费了很多资源在需要关闭的时候关闭它 */
+	
+	/*定时器完成中断标志*/
+	event_Time2Flag_ID	= osEventFlagsNew(&event_Time2Flag_Attr);	
 
 	tick = osKernelGetTickCount(); 
 	while(1){
@@ -304,7 +312,7 @@ void AppTaskStart(void *argument)
 
 
 
-static unsigned char LoopState = 0;
+//static unsigned char LoopState = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == (&htim2))
@@ -323,7 +331,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					}
 					else 
 					{
+						osEventFlagsSet(event_Time2Flag_ID , 0x01U << 0);	
+						/*stop*/
 						if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
+							
 						}						
 					}
 				}else{
@@ -332,14 +343,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						bsp_DelayUS(5);	
 						HAL_GPIO_WritePin(GPIOE , GPIO_PIN_10 , GPIO_PIN_RESET);				
 				}
-
-				//setpar.nflagGpio = 2;
 				break;
-		}
-		
-		
-		
-		osEventFlagsSet(event_Time2Flag_ID , 0x01U << 0);	
+				
+//				//伪随机模式
+//				case 2:
+//					break;
+		}	
+//		osEventFlagsSet(event_Time2Flag_ID , 0x01U << 0);	
 //		GpioToogleSet(&setpar);
 //		if (LoopState == 0)
 //		{
@@ -347,10 +357,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //			//HAL_GPIO_WritePin(GPIOE , GPIO_PIN_10 , GPIO_PIN_SET);
 //			HAL_GPIO_WritePin(GPIOE , GPIO_PIN_10 , GPIO_PIN_SET);
 //			bsp_DelayUS(5);			
-//			HAL_GPIO_WritePin(GPIOE , GPIO_PIN_10 , GPIO_PIN_RESET);
-//			
-
-//			
+//			HAL_GPIO_WritePin(GPIOE , GPIO_PIN_10 , GPIO_PIN_RESET);		
 //		}			
 //		LoopState = !LoopState;			
 	}
