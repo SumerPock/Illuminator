@@ -17,9 +17,37 @@
 TIM_HandleTypeDef htim2;
 
 
-/**矫正数组**/
-unsigned short arrRedress[31] = {8 , 18 , 26 , 34 , 42 , 54 , 65 , 75 , 85 , 95 , 105 , 115 , 125 , 135 ,
-145 , 155 , 165 , 175 , 185 , 195 , 205 , 215 , 225 , 235 , 245 , 255 , 265 , 275 , 280 , 280}; 
+/**矫正数组 1ms - 120ms**/
+unsigned short arrRedress[121] = 
+{
+8   , 18  , 26  , 34  , 42 , 
+54  , 65  , 75  , 85  , 95 ,	
+105 , 115 , 125 , 135 , 145 , 
+155 , 165 , 175 , 185 , 195 , 
+205 , 215 , 225 , 235 , 245 , 
+255 , 265 , 275 , 280 , 295 , 
+305 , 315 , 325 , 335 , 345 , 
+355 , 365 , 375 , 385 , 395 , 
+405 , 415 , 425 , 435 , 445 , 
+455 , 465 , 475 , 485 , 495 , 
+505 , 515 , 525 , 535 , 545 , 
+555 , 565 , 575 , 585 , 595 , 
+605 , 615 , 625 , 635 , 645 , 
+655 , 665 , 675 , 685 , 695 ,
+705 , 715 , 725 , 735 , 745 ,
+755 , 765 , 775 , 785 , 795 ,
+805 , 815 , 825 , 835 , 845 ,
+855 , 865 , 875 , 885 , 895 ,
+905 , 915 , 925 , 935 , 945 ,
+955 , 965 , 975 , 985 , 995 ,
+1005, 1015, 1025, 1035, 1045,
+1055, 1065, 1075, 1085, 1095,
+1105, 1115, 1125, 1135, 1145,
+1155, 1165, 1175, 1185, 1195,
+1205
+};
+
+
 /*!
 * @brief ARM 软重启 
 * ETH 重启指令: 0xff 0xaa 0xaa 0xff
@@ -33,7 +61,7 @@ void Reset_System(void)
 }
 
 
-void Update_Timer_Arr(uint32_t new_arr_value) {
+void Update_Timer_Arr(uint32_t new_arr_value){
     // 禁止定时器
     __HAL_TIM_DISABLE(&htim2);
 
@@ -53,9 +81,10 @@ void GpioToogleSet(GpioToogleSetPar *rect)
 		setpar.arrset = setpar.arrtimelow;
 //	MX_TIM2_Init();
 		if(HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
-		}	
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+		}
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);		
+		//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 		rect->nflagGpio = 2;
 		#ifdef GPIOTOOGLRDEBUG
 			SEGGER_RTT_SetTerminal(1);
@@ -75,13 +104,15 @@ void GpioToogleSet(GpioToogleSetPar *rect)
 					SEGGER_RTT_SetTerminal(1);
 					SEGGER_RTT_printf(0, "rect->pulseCount = %d \r\n",rect->pulseCount);	
 				#else
-				#endif						
-				HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
+				#endif	
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_SET);					
+				//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
 				//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 				if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
 				}
 				bsp_DelayDWT(675 - 30); //测试发现为5.0325us
-				HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);		
+				//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
 				//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 				if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
 				}
@@ -97,12 +128,14 @@ void GpioToogleSet(GpioToogleSetPar *rect)
 		else
 		{
 		//无限次数出
-			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_SET);	
+			//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
 			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 			if(HAL_TIM_Base_Stop_IT(&htim2)!= HAL_OK){
 			}
 			bsp_DelayDWT(675 - 30); //测试发现为5.0325us
-			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);	
+			//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
 			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 			if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK){
 			}

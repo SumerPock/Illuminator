@@ -15,6 +15,24 @@
 
 #define LED_CONTROL(a , b)	HAL_GPIO_WritePin(a , b)
  
+typedef enum             /* Defines an enumeration type    */
+{
+	RS232 = 0,
+	RS422 = 1,
+	RS485 = 2
+}SP330MODE;
+
+
+typedef enum             /* Defines an enumeration type    */
+{
+	U1 = 0,
+	U7 = 1,
+	U8 = 2,
+	U26 = 3
+}SP330NUM; 
+ 
+extern void ConfigSP330(unsigned char num , unsigned char mode);
+
 extern void bsp_InitGpio(void);
 
 extern void bsp_GpioOn(unsigned char _no);

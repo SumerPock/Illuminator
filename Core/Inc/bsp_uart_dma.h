@@ -12,14 +12,14 @@
 
 #define USART1_RX_SIZE	128
 #define USART2_RX_SIZE	128
-#define USART3_RX_SIZE	32	 
+#define USART3_RX_SIZE	128	 
 #define USART6_RX_SIZE	128
 #define UART4_RX_SIZE		128
 #define UART5_RX_SIZE		128
 
 /* 定义串口波特率和FIFO缓冲区大小，分为发送缓冲区和接收缓冲区, 支持全双工 */
 #if UART1_DMA_EN == 1
-	#define UART1_BAUD			921600
+	#define UART1_BAUD			115200
 	#define UART1_TX_BUF_SIZE	1*1024
 	#define UART1_RX_BUF_SIZE	1*1024
 #endif
@@ -31,7 +31,7 @@
 #endif
 
 #if UART3_DMA_EN == 1
-	#define UART3_BAUD			4800
+	#define UART3_BAUD			115200
 	#define UART3_TX_BUF_SIZE	1*1024
 	#define UART3_RX_BUF_SIZE	1*1024
 #endif

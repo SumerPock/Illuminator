@@ -22,6 +22,10 @@
 #include "bsp_dma.h"
 #include "bsp_uart_dma.h"
 #include "bsp_dwt.h"
+#include "bsp_spi_bus.h"
+#include "lcd.h"
+#include "lcd_init.h"
+#include "bsp_lcdui.h"
 
 #include "ring_buffer.h"
 #include "ring_buffer_chapter.h"
@@ -41,9 +45,34 @@
 #define ENABLE_INT()	__set_PRIMASK(0)	/* 使能全局中断 */
 #define DISABLE_INT()	__set_PRIMASK(1)	/* 禁止全局中断 */
 
+#define SPITIMEOUT 5
 
 
-extern unsigned short arrRedress[31];
+extern unsigned short arrLCDClearArea[20][4];
+
+extern unsigned short arrRedress[121];
+
+enum DYTState
+{
+	initialize = 0,
+	capture = 1,
+	not_caught = 2
+};
+enum DYTPlace
+{
+	center = 0, //中心
+	
+	north = 1,	//北
+	south = 2, //南
+	west = 3, //西
+	east = 4, //东
+	
+	north_by_west = 5, 		//北偏西
+	north_by_east = 6, 		//北偏东
+	south_by_west = 7, 	//南偏西
+	south_by_east = 8 		//南偏东
+};
+extern void DISPlay_image_park(enum DYTState dyts , enum DYTPlace dytp);
 
 
 // 定义结构体来存储属性
@@ -63,13 +92,26 @@ extern GpioToogleSetPar setpar;
 
 struct preciseCoding
 {
-	short 					Frequency; //次数
-	unsigned short  CodCycle;	 //周期
+	unsigned int  Frequency; //次数
+	unsigned int  CodCycle;	 //周期
 };
 
 
+//	unsigned int nrandomGroup = 0;				//伪随机编码组								 
+//	unsigned int nrandomSum   = 0;				//伪随机编码总数
+//	unsigned int nrandomIndex	= 0;				//伪随机编码当前索引
+//	unsigned int nrandomData = 0;					//伪随机编码值
 
-
+/*	伪随机部分	*/
+struct RANDOM
+{
+	unsigned char  nrandomGroup;					//伪随机编码组								 
+	unsigned short nrandomSum;						//伪随机编码总数
+	unsigned short nrandomIndex;					//伪随机编码当前索引
+	unsigned short nrandomData;						//伪随机编码值
+//	unsigned short arrRandomData[2048][2];
+	unsigned short arrRandomData[248];
+};
 
 
 
@@ -80,22 +122,6 @@ struct Get_UdPData
 	unsigned char arrUdp_index[128];
 };
 
-
-///*下位机收到 -> 舵机参数修改*/
-//struct Parameter_Steering_gear
-//{
-//	unsigned char ucpsdata[25];
-//};
-
-
-//struct baseCoding
-//{
-//	signed short 		baseCodFrequency; //次数
-//	unsigned short  baseCodCycle;			//周期
-//	
-//	unsigned short  baseCFVerify; 		//次数验证
-//	unsigned short  baseCCVerify;			//周期验证	
-//};
 
 
 typedef struct
@@ -117,7 +143,6 @@ extern struct GETUDPDATA SetUdpData;
 
 
 /***引用部分***/
-
 extern void Update_Timer_Arr(uint32_t new_arr_value);
 
 extern TIM_HandleTypeDef htim2;
@@ -173,6 +198,10 @@ extern const osEventFlagsAttr_t event_Time2Flag_Attr;
 extern osEventFlagsId_t event_Time2Flag_ID;
 
 /************************* 任务 *******************************/
+
+extern void AppTaskUIMode(void *argument);
+extern const osThreadAttr_t ThreadUIMode_Attr;
+extern osThreadId_t ThreadIdTaskUIMode;
 
 
 extern osThreadId_t ThreadIdStart;								/*启动任务*/

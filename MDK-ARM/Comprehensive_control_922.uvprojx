@@ -338,7 +338,7 @@
             <v6WtE>0</v6WtE>
             <v6Rtti>0</v6Rtti>
             <VariousControls>
-              <MiscControls></MiscControls>
+              <MiscControls>-Wno-invalid-source-encoding</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
               <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\RL-ARM\Driver;..\SEGGER\RTT</IncludePath>
@@ -474,6 +474,26 @@
               <FileName>Task_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\Task_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_spi_bus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\bsp_spi_bus.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\lcd_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_lcdui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\bsp_lcdui.c</FilePath>
             </File>
           </Files>
         </Group>

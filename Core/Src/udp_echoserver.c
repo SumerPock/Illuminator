@@ -171,7 +171,7 @@ void udp_echoserver_receive_callback(void *arg,
 
 	osMessageQueuePut(msgQueue_UdpResData , &getudpdata , NULL , NULL); 
 	
-//	udp_echoclient_send("this is demo" , 20);		
+//	udp_echoclient_send("this is demo" , 12);		
 	
 	//event_UdpGetData_ID = osEventFlagsNew(&event_UdpGetData_Attr);
 

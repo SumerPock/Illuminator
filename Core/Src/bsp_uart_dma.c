@@ -290,9 +290,11 @@ void MX_USART1_UART_Init(void)
 
   husart1.Instance = USART1;
   husart1.Init.BaudRate = UART1_BAUD;
-  husart1.Init.WordLength = UART_WORDLENGTH_9B;
+//  husart1.Init.WordLength = UART_WORDLENGTH_9B;
+	husart1.Init.WordLength = UART_WORDLENGTH_8B;
   husart1.Init.StopBits = UART_STOPBITS_1;
-  husart1.Init.Parity = UART_PARITY_EVEN;
+//  husart1.Init.Parity = UART_PARITY_EVEN;
+	husart1.Init.Parity = UART_PARITY_NONE;
   husart1.Init.Mode = UART_MODE_TX_RX;
   husart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   husart1.Init.OverSampling = UART_OVERSAMPLING_16;

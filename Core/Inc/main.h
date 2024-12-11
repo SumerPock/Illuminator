@@ -32,6 +32,11 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+/*周期限制*/
+#define CYCLELIMITMIN  40000
+#define CYCLELIMITMAX 120000
+#define CYCLELIMITDEF  50000
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
